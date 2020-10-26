@@ -1,0 +1,36 @@
+---
+    # Playbook for installing cockpit on each system
+    - name: Install Cockpit
+    
+      vars:
+      - cockpit_port: 9090
+    
+      hosts: cockpit
+      become: yes
+      become_user: root
+    
+      tasks:
+      - include: ppc64le.yml
+        when: ansible_architecture == "ppc64le"
+    
+      - include: x86_64.yml
+        when: ansible_architecture == "x86_64"
+    
+      - name: Install Cockpit packages
+        yum:
+          name:
+          - cockpit
+          - cockpit-docker
+          - cockpit-machines
+    
+      - name: Start Cockpit
+        service:
+          name: cockpit.socket
+          enabled: yes
+          state: started
+    
+      - name: Open firewall port
+        firewalld:
+          port: '{{ cockpit_port }}/tcp'
+          state: enabled
+          permanent: yes
